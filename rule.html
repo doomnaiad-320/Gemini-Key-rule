@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Vertex Express Endpoint</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        max-width: 800px;
+        width: 100%;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        color: #333;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.1em;
+      }
+
+      .input-section {
+        margin-bottom: 30px;
+      }
+
+      .input-group {
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .input-group input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+      }
+
+      .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .result-section {
+        display: none;
+        margin-top: 30px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        border-left: 5px solid #28a745;
+      }
+
+      .error-section {
+        display: none;
+        margin-top: 30px;
+        padding: 25px;
+        background: #fff5f5;
+        border-radius: 15px;
+        border-left: 5px solid #dc3545;
+      }
+
+      .result-item {
+        margin-bottom: 20px;
+      }
+
+      .result-item h3 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+      }
+
+      .result-value {
+        background: white;
+        padding: 15px 80px 15px 15px; /* 右侧留出空间给复制按钮 */
+        border-radius: 8px;
+        border: 1px solid #e1e5e9;
+        font-family: "Courier New", monospace;
+        word-break: break-all;
+        position: relative;
+        min-height: 20px;
+      }
+
+      .copy-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+
+      .copy-btn:hover {
+        background: #5a6fd8;
+        transform: translateY(-1px);
+      }
+
+      .models-list {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e1e5e9;
+      }
+
+      .models-list ul {
+        list-style: none;
+      }
+
+      .model-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .model-item:last-child {
+        border-bottom: none;
+      }
+
+      .model-name {
+        font-family: "Courier New", monospace;
+        flex: 1;
+        margin-right: 10px;
+      }
+
+      .model-copy-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+
+      .model-copy-btn:hover {
+        background: #218838;
+        transform: translateY(-1px);
+      }
+
+      .error-message {
+        color: #dc3545;
+        font-weight: 500;
+      }
+
+      .mode-switch {
+        display: flex;
+        margin-bottom: 30px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .mode-btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        background: #f8f9fa;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .mode-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .mode-btn:hover:not(.active) {
+        background: #e9ecef;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+        font-family: "Courier New", monospace;
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .file-upload-group {
+        margin-bottom: 20px;
+      }
+
+      .file-upload-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .file-upload-group input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 2px dashed #e1e5e9;
+        border-radius: 10px;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .file-upload-group input[type="file"]:hover {
+        border-color: #667eea;
+        background: white;
+      }
+
+      .file-upload-group small {
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+      }
+
+      .batch-progress {
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        border-left: 5px solid #667eea;
+      }
+
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .progress-header h3 {
+        margin: 0;
+        color: #333;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e1e5e9;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 15px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .progress-details {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .yaml-section {
+        margin-top: 30px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        border-left: 5px solid #28a745;
+      }
+
+      .yaml-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .yaml-header h3 {
+        margin: 0;
+        color: #333;
+      }
+
+      .download-btn {
+        width: auto;
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+
+      .yaml-preview {
+        background: white;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+        padding: 20px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .yaml-preview pre {
+        margin: 0;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #333;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .mode-switch {
+          flex-direction: column;
+        }
+
+        .progress-details {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .yaml-header {
+          flex-direction: column;
+          gap: 15px;
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚀 Google Vertex Express Endpoint</h1>
+        <p>快速获取您的 Google Vertex AI 终端节点</p>
+      </div>
+
+      <div class="mode-switch">
+        <button class="mode-btn active" onclick="switchMode('single')">单个处理</button>
+        <button class="mode-btn" onclick="switchMode('batch')">批量处理</button>
+      </div>
+
+      <div class="input-section" id="singleMode">
+        <div class="input-group">
+          <label for="apiKey">请输入您的 API Key:</label>
+          <input
+            type="text"
+            id="apiKey"
+            placeholder="输入您的 Google AI API Key"
+          />
+        </div>
+        <button class="btn" onclick="generateUrl()">生成终端节点</button>
+      </div>
+
+      <div class="input-section" id="batchMode" style="display: none;">
+        <div class="input-group">
+          <label for="batchApiKeys">批量输入 API Keys (每行一个):</label>
+          <textarea
+            id="batchApiKeys"
+            placeholder="请输入多个 API Keys，每行一个&#10;例如：&#10;AIzaSyA...&#10;AIzaSyB...&#10;AIzaSyC..."
+            rows="8"
+          ></textarea>
+        </div>
+        <div class="file-upload-group">
+          <label for="fileInput">或上传文件:</label>
+          <input type="file" id="fileInput" accept=".txt" onchange="handleFileUpload(event)">
+          <small>支持 .txt 文件，每行一个 API Key</small>
+        </div>
+        <button class="btn" onclick="processBatch()">批量处理</button>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p id="loadingText">正在验证 API Key...</p>
+      </div>
+
+      <div class="batch-progress" id="batchProgress" style="display: none;">
+        <div class="progress-header">
+          <h3>批量处理进度</h3>
+          <span id="progressText">0/0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-details">
+          <span>成功: <span id="successCount">0</span></span>
+          <span>失败: <span id="failureCount">0</span></span>
+          <span>总计: <span id="totalCount">0</span></span>
+        </div>
+      </div>
+
+      <div class="error-section" id="errorSection">
+        <h3>❌ 错误信息</h3>
+        <div class="error-message" id="errorMessage"></div>
+      </div>
+
+      <div class="result-section" id="resultSection">
+        <div class="result-item">
+          <h3>🔗 终端节点</h3>
+          <div class="result-value">
+            <span id="endpointUrl"></span>
+            <button class="copy-btn" onclick="copyToClipboard('endpointUrl')">
+              复制
+            </button>
+          </div>
+        </div>
+
+        <div class="result-item">
+          <h3>📋 可用模型</h3>
+          <div class="models-list">
+            <ul>
+              <li class="model-item">
+                <span class="model-name">gemini-2.5-pro-preview-06-05</span>
+                <button
+                  class="model-copy-btn"
+                  onclick="copyModelName('gemini-2.5-pro-preview-06-05')"
+                >
+                  复制
+                </button>
+              </li>
+              <li class="model-item">
+                <span class="model-name">gemini-2.5-pro-preview-05-06</span>
+                <button
+                  class="model-copy-btn"
+                  onclick="copyModelName('gemini-2.5-pro-preview-05-06')"
+                >
+                  复制
+                </button>
+              </li>
+              <li class="model-item">
+                <span class="model-name">gemini-2.5-flash-preview-05-20</span>
+                <button
+                  class="model-copy-btn"
+                  onclick="copyModelName('gemini-2.5-flash-preview-05-20')"
+                >
+                  复制
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="yaml-section" id="yamlSection" style="display: none;">
+        <div class="yaml-header">
+          <h3>🎯 批量处理结果</h3>
+          <button class="btn download-btn" onclick="downloadYaml()">下载 YAML 文件</button>
+        </div>
+        <div class="yaml-preview">
+          <pre id="yamlContent"></pre>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 全局变量
+      let batchResults = [];
+      let currentMode = 'single';
+
+      // 模式切换功能
+      function switchMode(mode) {
+        currentMode = mode;
+        const singleMode = document.getElementById('singleMode');
+        const batchMode = document.getElementById('batchMode');
+        const modeBtns = document.querySelectorAll('.mode-btn');
+
+        modeBtns.forEach(btn => btn.classList.remove('active'));
+
+        if (mode === 'single') {
+          singleMode.style.display = 'block';
+          batchMode.style.display = 'none';
+          modeBtns[0].classList.add('active');
+        } else {
+          singleMode.style.display = 'none';
+          batchMode.style.display = 'block';
+          modeBtns[1].classList.add('active');
+        }
+
+        // 隐藏所有结果区域
+        hideResults();
+        document.getElementById('batchProgress').style.display = 'none';
+        document.getElementById('yamlSection').style.display = 'none';
+      }
+
+      // 文件上传处理
+      function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const content = e.target.result;
+          document.getElementById('batchApiKeys').value = content;
+        };
+        reader.readAsText(file);
+      }
+
+      async function generateUrl() {
+        const apiKey = document.getElementById("apiKey").value.trim();
+
+        if (!apiKey) {
+          showError("请输入 API Key");
+          return;
+        }
+
+        // 显示加载状态
+        showLoading(true);
+        hideResults();
+
+        try {
+          const testUrl = `https://aiplatform.googleapis.com/v1/publishers/google/models/o3:streamGenerateContent?key=${apiKey}`;
+
+          const response = await fetch(testUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}),
+          });
+
+          const data = await response.json();
+
+          if (response.status === 404) {
+            // 检查是否是预期的404响应格式
+            let errorData = null;
+
+            // 处理数组格式的响应 [{error: {...}}] 或对象格式的响应 {error: {...}}
+            if (Array.isArray(data) && data.length > 0 && data[0].error) {
+              errorData = data[0].error;
+            } else if (data && data.error) {
+              errorData = data.error;
+            }
+
+            if (errorData && errorData.message) {
+              const projectIdMatch =
+                errorData.message.match(/projects\/(\d+)\//);
+
+              if (projectIdMatch && projectIdMatch[1]) {
+                const projectId = projectIdMatch[1];
+                const endpointUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers`;
+
+                showResults(endpointUrl);
+              } else {
+                showError("无法从响应中提取项目ID，请检查 API Key 是否正确");
+              }
+            } else {
+              showError("响应格式不正确，无法获取项目信息");
+            }
+          } else {
+            // 非404响应，显示错误
+            let errorMessage = "API Key 不正确";
+            let errorData = null;
+
+            // 处理数组格式的响应 [{error: {...}}] 或对象格式的响应 {error: {...}}
+            if (Array.isArray(data) && data.length > 0 && data[0].error) {
+              errorData = data[0].error;
+            } else if (data && data.error) {
+              errorData = data.error;
+            }
+
+            if (errorData && errorData.message) {
+              errorMessage += `：${errorData.message}`;
+            } else if (errorData) {
+              errorMessage += `：${JSON.stringify(errorData)}`;
+            } else {
+              errorMessage += `：未知错误 (HTTP ${response.status})`;
+            }
+
+            showError(errorMessage);
+          }
+        } catch (error) {
+          showError(`网络请求失败：${error.message}`);
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // 批量处理功能
+      async function processBatch() {
+        const batchInput = document.getElementById('batchApiKeys').value.trim();
+
+        if (!batchInput) {
+          showError("请输入 API Keys 或上传文件");
+          return;
+        }
+
+        // 解析 API Keys
+        const apiKeys = batchInput
+          .split('\n')
+          .map(key => key.trim())
+          .filter(key => key.length > 0);
+
+        if (apiKeys.length === 0) {
+          showError("未找到有效的 API Keys");
+          return;
+        }
+
+        // 初始化批量处理
+        batchResults = [];
+        showBatchProgress(true);
+        hideResults();
+        updateProgress(0, apiKeys.length, 0, 0);
+
+        let successCount = 0;
+        let failureCount = 0;
+
+        // 并发处理（限制并发数为3）
+        const concurrencyLimit = 3;
+        const chunks = [];
+        for (let i = 0; i < apiKeys.length; i += concurrencyLimit) {
+          chunks.push(apiKeys.slice(i, i + concurrencyLimit));
+        }
+
+        for (const chunk of chunks) {
+          const promises = chunk.map(async (apiKey, index) => {
+            try {
+              const result = await processApiKey(apiKey);
+              if (result.success) {
+                successCount++;
+                batchResults.push({
+                  apiKey: apiKey,
+                  projectId: result.projectId,
+                  endpointUrl: result.endpointUrl,
+                  success: true
+                });
+              } else {
+                failureCount++;
+                batchResults.push({
+                  apiKey: apiKey,
+                  error: result.error,
+                  success: false
+                });
+              }
+            } catch (error) {
+              failureCount++;
+              batchResults.push({
+                apiKey: apiKey,
+                error: error.message,
+                success: false
+              });
+            }
+
+            // 更新进度
+            const processed = successCount + failureCount;
+            updateProgress(processed, apiKeys.length, successCount, failureCount);
+          });
+
+          await Promise.all(promises);
+        }
+
+        // 处理完成
+        showBatchProgress(false);
+        generateYamlOutput();
+      }
+
+      // 处理单个 API Key
+      async function processApiKey(apiKey) {
+        try {
+          const testUrl = `https://aiplatform.googleapis.com/v1/publishers/google/models/o3:streamGenerateContent?key=${apiKey}`;
+
+          const response = await fetch(testUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}),
+          });
+
+          const data = await response.json();
+
+          if (response.status === 404) {
+            let errorData = null;
+
+            if (Array.isArray(data) && data.length > 0 && data[0].error) {
+              errorData = data[0].error;
+            } else if (data && data.error) {
+              errorData = data.error;
+            }
+
+            if (errorData && errorData.message) {
+              const projectIdMatch = errorData.message.match(/projects\/(\d+)\//);
+
+              if (projectIdMatch && projectIdMatch[1]) {
+                const projectId = projectIdMatch[1];
+                const endpointUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers`;
+
+                return {
+                  success: true,
+                  projectId: projectId,
+                  endpointUrl: endpointUrl
+                };
+              } else {
+                return {
+                  success: false,
+                  error: "无法从响应中提取项目ID"
+                };
+              }
+            } else {
+              return {
+                success: false,
+                error: "响应格式不正确"
+              };
+            }
+          } else {
+            return {
+              success: false,
+              error: `API Key 不正确 (HTTP ${response.status})`
+            };
+          }
+        } catch (error) {
+          return {
+            success: false,
+            error: `网络请求失败: ${error.message}`
+          };
+        }
+      }
+
+      // 进度显示功能
+      function showBatchProgress(show) {
+        document.getElementById('batchProgress').style.display = show ? 'block' : 'none';
+        document.getElementById('loadingText').textContent = show ? '正在批量处理 API Keys...' : '正在验证 API Key...';
+      }
+
+      function updateProgress(processed, total, success, failure) {
+        const percentage = total > 0 ? (processed / total) * 100 : 0;
+
+        document.getElementById('progressFill').style.width = percentage + '%';
+        document.getElementById('progressText').textContent = `${processed}/${total}`;
+        document.getElementById('successCount').textContent = success;
+        document.getElementById('failureCount').textContent = failure;
+        document.getElementById('totalCount').textContent = total;
+      }
+
+      // YAML 生成功能
+      function generateYamlOutput() {
+        const successResults = batchResults.filter(result => result.success);
+
+        if (successResults.length === 0) {
+          showError("没有成功处理的 API Keys");
+          return;
+        }
+
+        let yamlContent = "providers:\n";
+        yamlContent += "  - provider: vertex-express\n";
+        yamlContent += "    base_url: http://aiplatform.googleapis.com/  # base_url 支持 v1beta/v1, 仅供 Gemini 模型使用，必填\n";
+        yamlContent += "    stream: false\n";
+        yamlContent += "    api:\n";
+
+        successResults.forEach((result, index) => {
+          if (index === successResults.length - 1) {
+            // 最后一个 API key 添加注释
+            yamlContent += `      - ${result.apiKey}  # 支持多个 API Key，多个 key 自动开启轮训负载均衡，至少一个 key，必填\n`;
+          } else {
+            yamlContent += `      - ${result.apiKey}\n`;
+          }
+        });
+
+        yamlContent += "    model:  # 这里应该是 model 而不是 models\n";
+        yamlContent += "      - gemini-2.5-pro-preview-03-25\n";
+        yamlContent += "      - gemini-2.5-pro-preview-05-06\n\n";
+
+        yamlContent += "\n";
+        yamlContent += "preferences:\n";
+        yamlContent += "  api_key_schedule_algorithm: random\n";
+        yamlContent += "  api_key_cooldown_period: 10\n";
+        yamlContent += "  model_timeout:\n";
+        yamlContent += "    gemini-2.5-pro-preview-03-25: 150\n";
+        yamlContent += "    gemini-2.5-pro-preview-05-06: 150\n";
+        yamlContent += "  keepalive_interval:\n";
+        yamlContent += "    gemini-2.5-pro-preview-03-25: 140\n";
+        yamlContent += "    gemini-2.5-pro-preview-05-06: 140\n\n";
+
+        yamlContent += "api_keys:\n";
+        yamlContent += "  - api: sk-g1e99rj1iMFR2WW65kcHJ4OeaDTUiaJgjqwwURTEztpM9yGy\n";
+        yamlContent += "    model: [\"all\"]\n";
+        yamlContent += "    role: admin\n";
+
+        // 显示结果
+        document.getElementById('yamlContent').textContent = yamlContent;
+        document.getElementById('yamlSection').style.display = 'block';
+      }
+
+      // 下载 YAML 文件
+      function downloadYaml() {
+        const yamlContent = document.getElementById('yamlContent').textContent;
+        const blob = new Blob([yamlContent], { type: 'text/yaml' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `gemini-keys-${new Date().toISOString().split('T')[0]}.yaml`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function showLoading(show) {
+        document.getElementById("loading").style.display = show
+          ? "block"
+          : "none";
+        const buttons = document.querySelectorAll(".btn");
+        buttons.forEach(btn => btn.disabled = show);
+      }
+
+      function showResults(endpointUrl) {
+        document.getElementById("endpointUrl").textContent = endpointUrl;
+        document.getElementById("resultSection").style.display = "block";
+        document.getElementById("errorSection").style.display = "none";
+      }
+
+      function showError(message) {
+        document.getElementById("errorMessage").textContent = message;
+        document.getElementById("errorSection").style.display = "block";
+        document.getElementById("resultSection").style.display = "none";
+      }
+
+      function hideResults() {
+        document.getElementById("resultSection").style.display = "none";
+        document.getElementById("errorSection").style.display = "none";
+        document.getElementById("yamlSection").style.display = "none";
+      }
+
+      function copyToClipboard(elementId) {
+        const text = document.getElementById(elementId).textContent;
+        copyText(text, event.target);
+      }
+
+      function copyModelName(modelName) {
+        copyText(modelName, event.target);
+      }
+
+      function copyText(text, button) {
+        // 尝试使用现代的 Clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard
+            .writeText(text)
+            .then(() => {
+              showCopySuccess(button);
+            })
+            .catch((err) => {
+              console.error("Clipboard API 失败:", err);
+              fallbackCopyTextToClipboard(text, button);
+            });
+        } else {
+          // 降级到传统方法
+          fallbackCopyTextToClipboard(text, button);
+        }
+      }
+
+      function fallbackCopyTextToClipboard(text, button) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+
+        // 避免滚动到底部
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const successful = document.execCommand("copy");
+          if (successful) {
+            showCopySuccess(button);
+          } else {
+            showCopyError();
+          }
+        } catch (err) {
+          console.error("传统复制方法失败:", err);
+          showCopyError();
+        }
+
+        document.body.removeChild(textArea);
+      }
+
+      function showCopySuccess(button) {
+        const originalText = button.textContent;
+        const originalBackground =
+          button.style.background || getComputedStyle(button).backgroundColor;
+
+        button.textContent = "已复制!";
+        button.style.background = "#28a745";
+
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.background = originalBackground;
+        }, 2000);
+      }
+
+      function showCopyError() {
+        alert("复制失败，请手动复制文本");
+      }
+
+      // 回车键提交
+      document
+        .getElementById("apiKey")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            generateUrl();
+          }
+        });
+    </script>
+  </body>
+</html>
